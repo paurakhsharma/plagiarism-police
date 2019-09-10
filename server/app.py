@@ -17,7 +17,7 @@ users = db['Users']
 
 
 def userExists(username):
-    return users.find({'Username': username}).count() > 0
+    return users.count_documents({'Username': username}) > 0
 
 
 class Register(Resource):
@@ -37,7 +37,7 @@ class Register(Resource):
 
         hashed_pw = bcrypt.hashpw(password.encode('utf8'), bcrypt.gensalt())
 
-        users.insert({
+        users.insert_one({
             'Username': username,
             'Password': hashed_pw,
             'Tokens': 6  # each user gets 6 tokens while signing up
@@ -54,9 +54,9 @@ def verifyPw(username, password):
     if not userExists(username):
         return False
 
-    hashed_pw = users.find({
+    hashed_pw = users.find_one({
         'Username': username
-    })[0]['Password']
+    })['Password']
 
     if bcrypt.hashpw(password.encode('utf8'), hashed_pw) == hashed_pw:
         return True
@@ -65,9 +65,9 @@ def verifyPw(username, password):
 
 
 def countTokens(username):
-    return users.find({
+    return users.find_one({
         'Username': username
-    })[0]['Tokens']
+    })['Tokens']
 
 
 class Detect(Resource):
@@ -113,7 +113,7 @@ class Detect(Resource):
             'msg': 'Similarity score generated successfully'
         }
 
-        users.update({
+        users.update_one({
             'Username': username,
         }, {
             '$set': {
