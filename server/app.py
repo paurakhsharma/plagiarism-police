@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
-from flask_restput import Api, Resource
-from pymonog import MongoClient
+from flask_restful import Api, Resource
+from pymongo import MongoClient
 import bcrypt
 import spacy
 
@@ -11,7 +11,7 @@ BASE_API = '/api'
 app = Flask(__name__)
 api = Api(app)
 
-client = MongoClient('mongodb://db:27017')
+client = MongoClient('mongodb://localhost:27017')
 db = client.SimilarityDB
 users = db['Users']
 
@@ -51,7 +51,7 @@ class Register(Resource):
 
 
 def verifyPw(username, password):
-    if not username(username):
+    if not userExists(username):
         return False
 
     hashed_pw = users.find({
