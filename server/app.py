@@ -6,6 +6,8 @@ import spacy
 
 import os
 
+BASE_API = '/api'
+
 app = Flask(__name__)
 api = Api(app)
 
@@ -38,7 +40,7 @@ class Register(Resource):
         users.insert({
             'Username': username,
             'Password': hashed_pw,
-            'Tokens': 6     # each user gets 6 tokens while signing up
+            'Tokens': 6  # each user gets 6 tokens while signing up
         })
 
         ret_json = {
@@ -79,7 +81,7 @@ class Detect(Resource):
         text2 = posted_data['text2']
 
         correct_pw = verifyPw(username, password)
-        
+
         if not correct_pw or not userExists(username):
             ret_json = {
                 'status': 302,
@@ -89,7 +91,7 @@ class Detect(Resource):
 
         num_tokens = countTokens(username)
 
-        if num_tokens <=0:
+        if num_tokens <= 0:
             ret_json = {
                 'status': 303,
                 'msg': 'You\re out of tokens please purchase more'
@@ -120,6 +122,7 @@ class Detect(Resource):
         })
 
         return jsonify(ret_json)
+
 
 class Refill(Resource):
 
@@ -162,3 +165,11 @@ class Refill(Resource):
             'msg': 'User refilled'
         }
         return jsonify(ret_json)
+
+
+api.add_resource(Register, BASE_API + '/register')
+api.add_resource(Detect, BASE_API + '/detect')
+api.add_resource(Refill, BASE_API + '/refill')
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0')
