@@ -4,6 +4,8 @@ from pymonog import MongoClient
 import bcrypt
 import spacy
 
+import os
+
 app = Flask(__name__)
 api = Api(app)
 
@@ -117,4 +119,46 @@ class Detect(Resource):
             }
         })
 
+        return jsonify(ret_json)
+
+class Refill(Resource):
+
+    def post(self):
+        posted_data = request.get_json()
+
+        username = posted_data['username']
+        password = posted_data['admin_pw']
+        refill_amount = posted_data['refill']
+
+        if not userExists(username):
+            ret_json = {
+                'status': 301,
+                'msg': 'Invalid username'
+            }
+            return jsonify(ret_json)
+
+        admin_password = os.environ['ADMIN_PW']
+
+        if not password == admin_password:
+            ret_json = {
+                'status': 304,
+                'msg': 'Invalid admin password'
+            }
+            return jsonify(ret_json)
+
+        current_tokens = countTokens(username)
+        new_amount = current_tokens + refill_amount
+        users.update({
+            'Username': username
+        }, {
+            '$set': {
+                'Tokens': new_amount
+            }
+        })
+
+        ret_json = {
+            'status': 200,
+            'refill': new_amount,
+            'msg': 'User refilled'
+        }
         return jsonify(ret_json)
