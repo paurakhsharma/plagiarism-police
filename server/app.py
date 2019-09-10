@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_restput import Api, Resource
 from pymonog import MongoClient
 import bcrypt
+import spacy
 
 app = Flask(__name__)
 api = Api(app)
@@ -17,7 +18,6 @@ def userExists(username):
 
 class Register(Resource):
 
-    @property
     def post(self):
         posted_data = request.get_json()
 
@@ -42,5 +42,79 @@ class Register(Resource):
         ret_json = {
             'status': 'You\'ve successfully signed up to the API'
         }
+
+        return jsonify(ret_json)
+
+
+def verifyPw(username, password):
+    if not username(username):
+        return False
+
+    hashed_pw = users.find({
+        'Username': username
+    })[0]['Password']
+
+    if bcrypt.hashpw(password.encode('utf8'), hashed_pw) == hashed_pw:
+        return True
+
+    return False
+
+
+def countTokens(username):
+    return users.find({
+        'Username': username
+    })[0]['Tokens']
+
+
+class Detect(Resource):
+
+    def post(self):
+        posted_data = request.get_json()
+
+        username = posted_data['username']
+        password = posted_data['password']
+        text1 = posted_data['text1']
+        text2 = posted_data['text2']
+
+        correct_pw = verifyPw(username, password)
+        
+        if not correct_pw or not userExists(username):
+            ret_json = {
+                'status': 302,
+                'msg': 'Invalid username or password'
+            }
+            return jsonify(ret_json)
+
+        num_tokens = countTokens(username)
+
+        if num_tokens <=0:
+            ret_json = {
+                'status': 303,
+                'msg': 'You\re out of tokens please purchase more'
+            }
+            return jsonify(ret_json)
+
+        # Calculate the edit distance
+        nlp = spacy.load('en_core_web_sm')
+
+        text1 = nlp(text1)
+        text2 = nlp(text2)
+
+        # Ratio is the degree of similarity between the texts
+        ratio = text1.similarity(text2)
+
+        ret_json = {
+            'status': 200,
+            'similarity': ratio,
+            'msg': 'Similarity score generated successfully'
+        }
+
+        users.update({
+            'Username': username,
+        }, {
+            '$set': {
+                'Tokens': num_tokens - 1
+            }
+        })
 
         return jsonify(ret_json)
