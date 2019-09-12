@@ -11,7 +11,7 @@ BASE_API = '/api'
 app = Flask(__name__)
 api = Api(app)
 
-client = MongoClient('mongodb://localhost:27017')
+client = MongoClient('mongodb://db:27017')
 db = client.SimilarityDB
 users = db['Users']
 
@@ -151,7 +151,7 @@ class Refill(Resource):
 
         current_tokens = countTokens(username)
         new_amount = current_tokens + refill_amount
-        users.update({
+        users.update_one({
             'Username': username
         }, {
             '$set': {
