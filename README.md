@@ -24,8 +24,6 @@ Installation instructions
 
 
 ### TODO
-[ ] Implement frontend in Vue
-
-[ ] Implement frontend in Svelte
-
-[ ] Implement frontend in React
+- [ ] Implement frontend in Vue
+- [ ] Implement frontend in Svelte
+- [ ] Implement frontend in React
